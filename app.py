@@ -47,28 +47,27 @@ def get_morning_message():
         weather_url = f"https://api.openweathermap.org/data/2.5/weather?q=Tokyo&appid={os.getenv('OPENWEATHER_API_KEY')}&lang=ja&units=metric"
         
         try:
-            weather_response = requests.get(weather_url)
+            weather_response = requests.get(weather_url, timeout=10)
+            weather_response.raise_for_status()  # HTTPエラーを明示的に投げる
             weather_data = weather_response.json()
             
-            # レスポンスの確認
-            if weather_response.status_code == 200:
-                # 正常なレスポンスの場合
-                weather_data = {
-                    'weather': [{'description': weather_data['weather'][0]['description']}],
-                    'main': {'temp': round(weather_data['main']['temp'])}
-                }
+            # 天気データの構造を確認
+            if 'weather' in weather_data and 'main' in weather_data:
+                weather = weather_data['weather'][0].get('description', '情報取得中...')
+                temp = round(weather_data['main'].get('temp', 0))
             else:
-                print("Weather API Error:", weather_data.get('message', 'Unknown error'))
-                weather_data = {
-                    'weather': [{'description': '情報取得中...'}],
-                    'main': {'temp': 0}
-                }
-        except Exception as e:
+                print("Invalid weather API response format")
+                weather = '情報取得中...'
+                temp = 0
+        except requests.exceptions.RequestException as e:
             print("Weather API Error:", str(e))
-            weather_data = {
-                'weather': [{'description': '情報取得中...'}],
-                'main': {'temp': 0}
-            }
+            weather = '情報取得中...'
+            temp = 0
+            
+        weather_data = {
+            'weather': [{'description': weather}],
+            'main': {'temp': temp}
+        }
         
         # リマインド取得
         with open('data/reminders.json', 'r', encoding='utf-8') as f:
