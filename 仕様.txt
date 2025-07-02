@@ -1,0 +1,19 @@
+# 「朝のお知らせエージェント」アプリ仕様まとめ（たける用）
+
+【目的】
+- 小学三年生「たける」くんが朝起動すると、音声で
+  - 挨拶
+  - 昨日の感想問いかけ（返答UIなし）
+  - 今日の情報（天気、給食、下校時刻、リマインド）
+  - モチベーション一言
+- 親はスマホから
+  - 月1回：給食・下校時刻PDFアップロード
+  - 毎日：リマインド入力フォーム
+
+【技術構成】
+- Windsurf（ノーコード）
+- Vercel（公開・API管理）
+- Google Cloud Text-to-Speech, Vision API
+- OpenWeatherMap API
+- データ保存：Google Sheets or JSON
+- APIキーはVercel環境変数で管理（OPENWEATHER_API_KEY, GOOGLE_API_KEY）

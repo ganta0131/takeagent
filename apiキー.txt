@@ -1,0 +1,8 @@
+weather
+33f5cecb269060020f12bbeff5081917
+
+google
+AIzaSyAE7IC-TdIYFEWaEfvnP0iLciFBYU_Yfxk
+
+googleサービスアカウントアドレス
+tts-server-key@amplified-ward-457419-g1.iam.gserviceaccount.com

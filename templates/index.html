@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>朝のお知らせエージェント</title>
+    <style>
+        body {
+            font-family: 'Yu Gothic', sans-serif;
+            background: linear-gradient(135deg, #87CEEB, #FFFFFF);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0074D9;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .message-box {
+            background: #F5F5F5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .info-box {
+            background: #E6F3FF;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .weather-icon {
+            font-size: 2em;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>朝のお知らせエージェント</h1>
+        
+        <div id="message-box" class="message-box">
+            <p id="greeting"></p>
+            <p id="weather"></p>
+            <p id="reminders"></p>
+            <p id="motivation"></p>
+        </div>
+
+        <div class="info-box">
+            <h2>今日の情報</h2>
+            <div id="today-info"></div>
+        </div>
+    </div>
+
+    <script>
+        async function getMorningMessage() {
+            try {
+                const response = await fetch('/api/morning-message');
+                const data = await response.json();
+                
+                // データの存在確認とデフォルト値設定
+                const weather = data.weather || '情報取得中...';
+                const temperature = data.temperature || 0;
+                const reminders = data.reminders || [];
+                
+                document.getElementById('greeting').textContent = 'こんにちは！たけるくん！';
+                document.getElementById('weather').textContent = `今日の天気は${weather}で、気温は${temperature}度です。`;
+                
+                if (reminders.length > 0) {
+                    document.getElementById('reminders').textContent = '今日のリマインド：\n' + reminders.join('\n');
+                } else {
+                    document.getElementById('reminders').textContent = 'リマインドはありません。';
+                }
+                
+                document.getElementById('motivation').textContent = '今日も頑張ろうね！';
+                
+                // 音声合成
+                const speech = new SpeechSynthesisUtterance();
+                speech.text = `こんにちは！たけるくん！\n\n今日の天気は${weather}で、気温は${temperature}度です。\n\n${reminders.join('\n')}\n\n今日も頑張ろうね！`;
+                speech.lang = 'ja-JP';
+                speech.rate = 1.0;
+                speech.pitch = 1.0;
+                
+                window.speechSynthesis.speak(speech);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // ページ読み込み時にメッセージを取得
+        window.onload = getMorningMessage;
+    </script>
+</body>
+</html>

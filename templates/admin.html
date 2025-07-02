@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理画面 - 朝のお知らせエージェント</title>
+    <style>
+        body {
+            font-family: 'Yu Gothic', sans-serif;
+            background: linear-gradient(135deg, #87CEEB, #FFFFFF);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0074D9;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-section {
+            background: #F5F5F5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .upload-section {
+            background: #E6F3FF;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .success-message {
+            color: green;
+            margin-top: 10px;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>管理画面</h1>
+        
+        <div class="form-section">
+            <h2>リマインド設定</h2>
+            <form id="reminder-form">
+                <textarea id="reminder-text" placeholder="リマインドメッセージを入力してください" rows="4" class="w-full p-2 border rounded"></textarea>
+                <button type="submit" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">リマインドを設定</button>
+            </form>
+            <div id="reminder-message"></div>
+        </div>
+
+        <div class="upload-section">
+            <h2>スケジュールアップロード</h2>
+            <form id="upload-form" enctype="multipart/form-data">
+                <input type="file" id="schedule-file" accept=".pdf" class="w-full p-2 border rounded">
+                <button type="submit" class="mt-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">PDFをアップロード</button>
+            </form>
+            <div id="upload-message"></div>
+        </div>
+    </div>
+
+    <script>
+        // リマインド設定フォームの処理
+        document.getElementById('reminder-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = document.getElementById('reminder-text').value;
+            
+            try {
+                const response = await fetch('/api/set-reminder', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message }),
+                });
+                
+                const data = await response.json();
+                document.getElementById('reminder-message').textContent = data.message;
+                document.getElementById('reminder-message').classList.add('success-message');
+                document.getElementById('reminder-text').value = '';
+            } catch (error) {
+                document.getElementById('reminder-message').textContent = 'リマインドの設定に失敗しました。';
+                document.getElementById('reminder-message').classList.add('error-message');
+            }
+        });
+
+        // PDFアップロードフォームの処理
+        document.getElementById('upload-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('schedule-file');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                document.getElementById('upload-message').textContent = 'ファイルを選択してください。';
+                document.getElementById('upload-message').classList.add('error-message');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/upload-schedule', {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                const data = await response.json();
+                document.getElementById('upload-message').textContent = data.message;
+                document.getElementById('upload-message').classList.add('success-message');
+            } catch (error) {
+                document.getElementById('upload-message').textContent = 'アップロードに失敗しました。';
+                document.getElementById('upload-message').classList.add('error-message');
+            }
+        });
+    </script>
+</body>
+</html>
