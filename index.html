@@ -41,6 +41,10 @@
             font-size: 2em;
             margin-right: 10px;
         }
+        .error {
+            color: #ff4444;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -64,9 +68,15 @@
         async function getMorningMessage() {
             try {
                 const response = await fetch('/api/morning-message');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const data = await response.json();
                 
-                // データの存在確認とデフォルト値設定
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
                 const weather = data.weather || '情報取得中...';
                 const temperature = data.temperature || 0;
                 const reminders = data.reminders || [];
@@ -82,16 +92,20 @@
                 
                 document.getElementById('motivation').textContent = '今日も頑張ろうね！';
                 
-                // 音声合成
-                const speech = new SpeechSynthesisUtterance();
-                speech.text = `こんにちは！たけるくん！\n\n今日の天気は${weather}で、気温は${temperature}度です。\n\n${reminders.join('\n')}\n\n今日も頑張ろうね！`;
-                speech.lang = 'ja-JP';
-                speech.rate = 1.0;
-                speech.pitch = 1.0;
-                
-                window.speechSynthesis.speak(speech);
+                if ('speechSynthesis' in window) {
+                    const speech = new SpeechSynthesisUtterance();
+                    speech.text = `こんにちは！たけるくん！\n\n今日の天気は${weather}で、気温は${temperature}度です。\n\n${reminders.join('\n')}\n\n今日も頑張ろうね！`;
+                    speech.lang = 'ja-JP';
+                    speech.rate = 1.0;
+                    speech.pitch = 1.0;
+                    window.speechSynthesis.speak(speech);
+                }
             } catch (error) {
                 console.error('Error:', error);
+                document.getElementById('greeting').textContent = 'エラーが発生しました';
+                document.getElementById('weather').textContent = '情報取得に失敗しました';
+                document.getElementById('reminders').textContent = 'リマインドの取得に失敗しました';
+                document.getElementById('motivation').textContent = '申し訳ありません';
             }
         }
 

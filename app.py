@@ -1,32 +1,15 @@
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime
 import os
-from dotenv import load_dotenv
 import requests
-from google.cloud import texttospeech
-from google.cloud import vision
 import json
 
 # Flaskアプリケーションの作成
 app = Flask(__name__)
 
-# 環境変数の読み込み
-env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
-if os.path.exists(env_path):
-    load_dotenv(env_path)
-else:
-    print(".envファイルが見つかりません")
-
-# 環境変数の確認
-api_key = os.getenv('OPENWEATHER_API_KEY')
-if not api_key:
-    print("環境変数が設定されていません。以下のコマンドで設定してください：")
-    print("$env:OPENWEATHER_API_KEY='757b8b551ef58f6ed9e8734408438347'")
-    raise ValueError("OPENWEATHER_API_KEYが設定されていません")
-
-# データ保存用ディレクトリ作成
-if not os.path.exists('data'):
-    os.makedirs('data')
+# 環境変数の設定
+OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 # データ保存用ディレクトリ作成
 if not os.path.exists('data'):
@@ -34,21 +17,21 @@ if not os.path.exists('data'):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return app.send_static_file('index.html')
 
 @app.route('/admin')
 def admin():
-    return render_template('admin.html')
+    return app.send_static_file('admin.html')
 
 @app.route('/api/morning-message')
 def get_morning_message():
     try:
         # 天気情報取得
-        weather_url = f"https://api.openweathermap.org/data/2.5/weather?q=Tokyo&appid={os.getenv('OPENWEATHER_API_KEY')}&lang=ja&units=metric"
+        weather_url = f"https://api.openweathermap.org/data/2.5/weather?q=Tokyo&appid={OPENWEATHER_API_KEY}&lang=ja&units=metric"
         
         try:
             weather_response = requests.get(weather_url, timeout=10)
-            weather_response.raise_for_status()  # HTTPエラーを明示的に投げる
+            weather_response.raise_for_status()
             weather_data = weather_response.json()
             
             # 天気データの構造を確認
@@ -64,21 +47,19 @@ def get_morning_message():
             weather = '情報取得中...'
             temp = 0
             
-        weather_data = {
-            'weather': [{'description': weather}],
-            'main': {'temp': temp}
-        }
-        
         # リマインド取得
-        with open('data/reminders.json', 'r', encoding='utf-8') as f:
-            reminders = json.load(f)
+        try:
+            with open('data/reminders.json', 'r', encoding='utf-8') as f:
+                reminders = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            reminders = []
         
         # 今日のリマインド
         today_reminders = [r["message"] for r in reminders if r["date"] == datetime.now().strftime("%Y-%m-%d")]
         
         # メッセージ作成
         message = f"こんにちは！たけるくん！\n\n"
-        message += f"今日の天気は{weather_data['weather'][0]['description']}で、気温は{weather_data['main']['temp']}度です。\n"
+        message += f"今日の天気は{weather}で、気温は{temp}度です。\n"
         
         if today_reminders:
             message += "\n今日のリマインド：\n"
@@ -88,11 +69,18 @@ def get_morning_message():
         
         return jsonify({
             "message": message,
-            "weather": weather_data['weather'][0]['description'],
-            "temperature": weather_data['main']['temp'],
+            "weather": weather,
+            "temperature": temp,
             "reminders": today_reminders
         })
     except Exception as e:
+        print("Error:", str(e))
+        return jsonify({
+            "error": "エラーが発生しました",
+            "weather": "情報取得中...",
+            "temperature": 0,
+            "reminders": []
+        }), 500
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/set-reminder', methods=['POST'])
