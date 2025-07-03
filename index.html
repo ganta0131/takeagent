@@ -3,114 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>朝のお知らせエージェント</title>
+    <title>TakeAgent - 朝のメッセージ生成</title>
     <style>
         body {
             font-family: 'Yu Gothic', sans-serif;
-            background: linear-gradient(135deg, #87CEEB, #FFFFFF);
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
             max-width: 800px;
             margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 20px;
+            background-color: #f5f5f5;
         }
-        h1 {
-            color: #0074D9;
-            text-align: center;
-            margin-bottom: 30px;
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .generate-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .generate-btn:hover {
+            background-color: #45a049;
         }
         .message-box {
-            background: #F5F5F5;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
         }
-        .info-box {
-            background: #E6F3FF;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        .audio-controls {
+            margin-top: 20px;
         }
-        .weather-icon {
-            font-size: 2em;
+        .audio-controls button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
             margin-right: 10px;
         }
-        .error {
-            color: #ff4444;
-            font-weight: bold;
+        .audio-controls button:hover {
+            background-color: #1976D2;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>朝のお知らせエージェント</h1>
+        <h1>TakeAgent</h1>
+        <p>朝のメッセージを生成し、音声に変換します</p>
         
-        <div id="message-box" class="message-box">
-            <p id="greeting"></p>
-            <p id="weather"></p>
-            <p id="reminders"></p>
-            <p id="motivation"></p>
+        <button class="generate-btn" onclick="generateMessage()">メッセージを生成</button>
+        
+        <div id="message-box" class="message-box" style="display: none;">
+            <h2>生成されたメッセージ</h2>
+            <div id="message-content"></div>
         </div>
-
-        <div class="info-box">
-            <h2>今日の情報</h2>
-            <div id="today-info"></div>
+        
+        <div id="audio-controls" class="audio-controls" style="display: none;">
+            <button onclick="playAudio()">再生</button>
+            <button onclick="pauseAudio()">一時停止</button>
+            <button onclick="stopAudio()">停止</button>
         </div>
     </div>
 
     <script>
-        async function getMorningMessage() {
-            try {
-                const response = await fetch('/api/morning-message');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                
-                if (data.error) {
-                    throw new Error(data.error);
-                }
+        let audio = null;
 
-                const weather = data.weather || '情報取得中...';
-                const temperature = data.temperature || 0;
-                const reminders = data.reminders || [];
-                
-                document.getElementById('greeting').textContent = 'こんにちは！たけるくん！';
-                document.getElementById('weather').textContent = `今日の天気は${weather}で、気温は${temperature}度です。`;
-                
-                if (reminders.length > 0) {
-                    document.getElementById('reminders').textContent = '今日のリマインド：\n' + reminders.join('\n');
+        function generateMessage() {
+            fetch('/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('message-content').textContent = data.text;
+                    document.getElementById('message-box').style.display = 'block';
+                    document.getElementById('audio-controls').style.display = 'block';
+                    
+                    // 音声ファイルを再生する準備
+                    if (audio) {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    }
+                    
+                    // 音声ファイルのパスを正しく設定
+                    const audioPath = '/' + data.audio_file;
+                    audio = new Audio(audioPath);
+                    
+                    // メッセージを生成したことをログに記録
+                    console.log('メッセージを生成しました:', data.text);
+                    console.log('音声ファイルのパス:', audioPath);
                 } else {
-                    document.getElementById('reminders').textContent = 'リマインドはありません。';
+                    alert('メッセージの生成に失敗しました: ' + data.message);
                 }
-                
-                document.getElementById('motivation').textContent = '今日も頑張ろうね！';
-                
-                if ('speechSynthesis' in window) {
-                    const speech = new SpeechSynthesisUtterance();
-                    speech.text = `こんにちは！たけるくん！\n\n今日の天気は${weather}で、気温は${temperature}度です。\n\n${reminders.join('\n')}\n\n今日も頑張ろうね！`;
-                    speech.lang = 'ja-JP';
-                    speech.rate = 1.0;
-                    speech.pitch = 1.0;
-                    window.speechSynthesis.speak(speech);
-                }
-            } catch (error) {
+            })
+            .catch(error => {
                 console.error('Error:', error);
-                document.getElementById('greeting').textContent = 'エラーが発生しました';
-                document.getElementById('weather').textContent = '情報取得に失敗しました';
-                document.getElementById('reminders').textContent = 'リマインドの取得に失敗しました';
-                document.getElementById('motivation').textContent = '申し訳ありません';
+                alert('エラーが発生しました: ' + error.message);
+            });
+        }
+
+        function playAudio() {
+            if (audio) {
+                audio.play();
             }
         }
 
-        // ページ読み込み時にメッセージを取得
-        window.onload = getMorningMessage;
+        function pauseAudio() {
+            if (audio) {
+                audio.pause();
+            }
+        }
+
+        function stopAudio() {
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        }
     </script>
 </body>
 </html>

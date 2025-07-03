@@ -1,19 +1,59 @@
-# 「朝のお知らせエージェント」アプリ仕様まとめ（たける用）
-
 【目的】
-- 小学三年生「たける」くんが朝起動すると、音声で
-  - 挨拶
-  - 昨日の感想問いかけ（返答UIなし）
-  - 今日の情報（天気、給食、下校時刻、リマインド）
-  - モチベーション一言
-- 親はスマホから
-  - 月1回：給食・下校時刻PDFアップロード
-  - 毎日：リマインド入力フォーム
+小学三年生の「たける」くんが朝アプリを起動すると、音声でその日の情報を読み上げてくれる。親はスマホから事前に情報を入力・アップロードする。
+AIはたけるの「執事」としてふるまう。言葉遣いなど。
+
+【読み上げフロー（起動時）】
+1. 挨拶：
+　例：「おはようございます、たける様。今日も元気にがんばってくださいませ」
+
+2. 昨日の感想を問いかけ（返答UIなし）：
+　例：「昨日はいかがでしたか？楽しかったですか？」
+
+3. 今日の情報を読み上げ：
+　- 天気予報（OpenWeatherMap APIで愛知県江南市。今日の朝から夕方までの天気を簡潔に。雨が降る予報なら何時に振り始めるかを必ず含める。例：「今日は晴れのち雨。午後２時から雨が降るかもしれません。）
+　- 給食のメニュー（google sheets「takeru-kyushoku」から取得。A列が日付、B列が献立です。献立は省略せずすべて読み上げる。）
+　- 下校時刻（google sheets「takeru-geko」から取得。A列が日付、B列が下校時刻です。「下校は午後2時55分です」のようにシンプルに読み上げる）
+　- リマインド（google sheets「takeru-remind」A2セルの情報。読み上げるときは必ず前に「それから、ママからの伝言ですが、」をつけ、リマインド読み上げ後に「だ、そうです」をつける）
+
+4. モチベーションが上がる一言（情報に絡めて動的生成、Google Generative Language API）：
+　例：
+　- 「今日はいい天気です、元気に外で遊べそうですね！」
+　- 「カレーの日でございます、楽しみですね！」
+　- 「下校時間に雨が降りそうです、傘を持っていってくださいね、たける様！」
+
+【親の操作】
+- 月1回：給食・下校時刻の情報をgoogle sheetsに入力しておく1か月分
+- 毎日：スマホで保護者フォームからリマインドを入力
 
 【技術構成】
-- Windsurf（ノーコード）
-- Vercel（公開・API管理）
-- Google Cloud Text-to-Speech, Vision API
-- OpenWeatherMap API
-- データ保存：Google Sheets or JSON
-- APIキーはVercel環境変数で管理（OPENWEATHER_API_KEY, GOOGLE_API_KEY）
+- フロント：Windsurf（ノーコードUI）
+- サーバー側API：Vercelで「外だしAPI」構築
+- 公開：Vercel（GitHub連携、環境変数管理あり）
+- 音声：Google Cloud Text-to-Speech API（日本語対応、男性の声）
+- 音声(動的コメント)：Google Generative Language API
+- 天気：OpenWeatherMap API（無料プラン使用、日本語・摂氏対応）
+- データ保存：Google Sheets API（リマインド情報など）
+- APIキー管理：Vercelの環境変数でサーバー側に隠蔽
+- 表示キャラクター：現在なし（将来実装予定）
+
+【開発ステップ】
+1. APIキー取得（OpenWeatherMap・Google Cloud）
+2. Vercel + GitHub連携、環境変数設定
+3. API外だし
+4. 起動時に情報取得・音声読み上げ処理
+5. UI調整（たける向けに最適化）
+6. デプロイ・実機テスト・本運用
+
+【セキュリティ】
+- APIキーはVercel環境変数に保存し、絶対にクライアントに渡さない
+- 認証なしでも安全に利用できる設計（個人情報レス）
+
+【その他】
+- 全APIはサーバー側に外だしして、安全にfetchで呼び出す設計
+- APIのデバッグはVercelログ、Postman、UI変数表示で対応
+- できるだけ少ないファイル数で制作してください。
+
+【google sheets URL】
+takeru-geko：https://docs.google.com/spreadsheets/d/18LOXzRjakazyQ5SB_yLHfZhZOBTIqp2E_am9gNrIJOQ/edit?usp=sharing
+takeru-kyushoku：https://docs.google.com/spreadsheets/d/1VgVASBlOmjK_VLbsbgAGn0wu6Oi5CRiUJXfVZ8zhOpY/edit?usp=sharing
+takeru-remind：https://docs.google.com/spreadsheets/d/1QOjCLGUat3G6n3LlaY8iKr9Eu93AEkimNuPUqwFPJoI/edit?usp=sharing

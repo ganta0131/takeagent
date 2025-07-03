@@ -1,0 +1,5 @@
+venv/
+__pycache__/
+*.pyc
+.env
+amplified-ward-457419-g1-d926f1d3100b.json

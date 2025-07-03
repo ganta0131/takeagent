@@ -1,143 +1,60 @@
-from flask import Flask, request, jsonify, render_template
-from datetime import datetime
+from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 import os
-import requests
-import json
+from dotenv import load_dotenv
+import sys
+import importlib.util
 
-# Flaskアプリケーションの作成
+# 環境変数の読み込み
+load_dotenv()
+
+
+
+# test_all.pyを直接インポート
+spec = importlib.util.spec_from_file_location("test_all", "test_all.py")
+test_all = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(test_all)
+
+def generate_text():
+    return test_all.generate_text()
+
 app = Flask(__name__)
-
-# 環境変数の設定
-OPENWEATHER_API_KEY = os.getenv('OPENWEATHER_API_KEY')
-GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-
-# データ保存用ディレクトリ作成
-if not os.path.exists('data'):
-    os.makedirs('data')
+CORS(app)
 
 @app.route('/')
 def index():
-    return app.send_static_file('index.html')
+    return render_template('index.html')
 
-@app.route('/admin')
-def admin():
-    return app.send_static_file('admin.html')
-
-@app.route('/api/morning-message')
-def get_morning_message():
+@app.route('/generate', methods=['POST'])
+def generate():
     try:
-        # 天気情報取得
-        weather_url = f"https://api.openweathermap.org/data/2.5/weather?q=Tokyo&appid={OPENWEATHER_API_KEY}&lang=ja&units=metric"
+        text = generate_text()
         
-        try:
-            weather_response = requests.get(weather_url, timeout=10)
-            weather_response.raise_for_status()
-            weather_data = weather_response.json()
-            
-            # 天気データの構造を確認
-            if 'weather' in weather_data and 'main' in weather_data:
-                weather = weather_data['weather'][0].get('description', '情報取得中...')
-                temp = round(weather_data['main'].get('temp', 0))
-            else:
-                print("Invalid weather API response format")
-                weather = '情報取得中...'
-                temp = 0
-        except requests.exceptions.RequestException as e:
-            print("Weather API Error:", str(e))
-            weather = '情報取得中...'
-            temp = 0
-            
-        # リマインド取得
-        try:
-            with open('data/reminders.json', 'r', encoding='utf-8') as f:
-                reminders = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            reminders = []
+        # synthesize_speech.pyから音声合成関数をインポート
+        from synthesize_speech import synthesize_speech
         
-        # 今日のリマインド
-        today_reminders = [r["message"] for r in reminders if r["date"] == datetime.now().strftime("%Y-%m-%d")]
+        # 音声ファイルをstaticディレクトリに保存
+        static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+        if not os.path.exists(static_dir):
+            os.makedirs(static_dir)
         
-        # メッセージ作成
-        message = f"こんにちは！たけるくん！\n\n"
-        message += f"今日の天気は{weather}で、気温は{temp}度です。\n"
+        audio_file = os.path.join(static_dir, 'output.mp3')
+        synthesize_speech(text, audio_file)
         
-        if today_reminders:
-            message += "\n今日のリマインド：\n"
-            message += "\n".join(today_reminders)
-        
-        message += "\n今日も頑張ろうね！"
+        # 音声ファイルのパスを相対パスに変換
+        relative_path = os.path.relpath(audio_file, os.path.dirname(os.path.abspath(__file__)))
         
         return jsonify({
-            "message": message,
-            "weather": weather,
-            "temperature": temp,
-            "reminders": today_reminders
+            'status': 'success',
+            'text': text,
+            'audio_file': relative_path
         })
     except Exception as e:
-        print("Error:", str(e))
+        print(f"Error: {str(e)}")
         return jsonify({
-            "error": "エラーが発生しました",
-            "weather": "情報取得中...",
-            "temperature": 0,
-            "reminders": []
+            'status': 'error',
+            'message': str(e)
         }), 500
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/set-reminder', methods=['POST'])
-def set_reminder():
-    try:
-        data = request.json
-        today = datetime.now().strftime("%Y-%m-%d")
-        
-        # リマインドデータを保存
-        if not os.path.exists('data/reminders.json'):
-            with open('data/reminders.json', 'w', encoding='utf-8') as f:
-                json.dump([], f, ensure_ascii=False, indent=4)
-        
-        with open('data/reminders.json', 'r', encoding='utf-8') as f:
-            reminders = json.load(f)
-        
-        reminders.append({
-            "date": today,
-            "message": data['message']
-        })
-        
-        with open('data/reminders.json', 'w', encoding='utf-8') as f:
-            json.dump(reminders, f, ensure_ascii=False, indent=4)
-        
-        return jsonify({"message": "リマインドが設定されました"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/upload-schedule', methods=['POST'])
-def upload_schedule():
-    try:
-        file = request.files['file']
-        if file:
-            # PDFを保存
-            filename = f"schedule_{datetime.now().strftime('%Y%m')}.pdf"
-            file.save(os.path.join('data', filename))
-            
-            # PDFからテキスト抽出
-            client = vision.ImageAnnotatorClient()
-            with open(os.path.join('data', filename), 'rb') as image_file:
-                content = image_file.read()
-            
-            image = vision.Image(content=content)
-            response = client.document_text_detection(image=image)
-            text = response.full_text_annotation.text
-            
-            # テキストをJSONに変換して保存
-            schedule_data = {
-                "date": datetime.now().strftime("%Y-%m-%d"),
-                "text": text
-            }
-            with open(f"data/schedule_{datetime.now().strftime('%Y%m')}.json", 'w', encoding='utf-8') as f:
-                json.dump(schedule_data, f, ensure_ascii=False, indent=4)
-            
-            return jsonify({"message": "スケジュールがアップロードされました"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
