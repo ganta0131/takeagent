@@ -1,8 +1,0 @@
-weather
-757b8b551ef58f6ed9e8734408438347
-
-google
-AIzaSyAE7IC-TdIYFEWaEfvnP0iLciFBYU_Yfxk
-
-googleサービスアカウントアドレス
-takeru-agent@amplified-ward-457419-g1.iam.gserviceaccount.com

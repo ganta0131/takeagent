@@ -1,5 +1,44 @@
+# Python
 venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Environment
 .env
+.env.*
+!env.example
+
+# API Keys and Credentials
+*.json
+apiキー.txt
 amplified-ward-457419-g1-d926f1d3100b.json
+
+# Japanese Text Files
+プロンプト.txt
+仕様.txt
+毎回必要なこと.txt
+
+# Test Files
+*test*.py
+test_*.py
+*.test.py
+test_generative_language.py
+test_google_sheets.py
+test_sheets_geko.py
+test_sheets_kyushoku.py
+test_sheets_remind.py
+test_text_to_speech.py
+test_weather.py
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Ignore folder
+ignore/
