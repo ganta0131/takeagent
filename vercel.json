@@ -16,5 +16,12 @@
       "src": "/(.*)",
       "dest": "app.py"
     }
-  ]
+  ],
+  "networkAccess": {
+    "allowed": [
+      "*.googleapis.com",
+      "*.gstatic.com",
+      "api.openweathermap.org"
+    ]
+  }
 }
