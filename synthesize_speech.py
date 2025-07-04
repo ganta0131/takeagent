@@ -3,14 +3,24 @@ from google.cloud import texttospeech
 import os
 import sys
 import io
+import json
+from google.oauth2 import service_account
 
 def synthesize_speech(text, output_file='output.mp3'):
     try:
-        # サービスアカウントキーのパス
-        credentials_path = 'amplified-ward-457419-g1-d926f1d3100b.json'
+        # サービスアカウント情報を環境変数から取得
+        service_account_info = os.getenv('GOOGLE_SERVICE_ACCOUNT_INFO')
+        if not service_account_info:
+            raise ValueError("GOOGLE_SERVICE_ACCOUNT_INFO environment variable not set")
+            
+        # JSON文字列を辞書に変換
+        credentials_dict = json.loads(service_account_info)
+        
+        # クレデンシャルを作成
+        credentials = service_account.Credentials.from_service_account_info(credentials_dict)
         
         # クライアントをインスタンス化
-        client = texttospeech.TextToSpeechClient.from_service_account_file(credentials_path)
+        client = texttospeech.TextToSpeechClient(credentials=credentials)
         
         # ボイスを設定（日本語、男性）
         voice = texttospeech.VoiceSelectionParams(
@@ -47,17 +57,10 @@ def synthesize_speech(text, output_file='output.mp3'):
         with open(output_file, "wb") as out:
             for i, part in enumerate(parts):
                 print(f"Processing part {i+1}/{len(parts)}: {part[:50]}...")
-                synthesis_input = texttospeech.SynthesisInput(text=part)
-                response = client.synthesize_speech(
-                    input=synthesis_input,
-                    voice=voice,
-                    audio_config=audio_config
-                )
-                print(f"Response received. Audio length: {len(response.audio_content)} bytes")
-                out.write(response.audio_content)
         
         print("All parts processed successfully.")
-        return output_file
+        # メモリ上のバイトデータを返す
+        return audio_content
         
     except Exception as e:
         print(f"Error details: {str(e)}")

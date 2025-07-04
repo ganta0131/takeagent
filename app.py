@@ -33,21 +33,17 @@ def generate():
         # synthesize_speech.pyから音声合成関数をインポート
         from synthesize_speech import synthesize_speech
         
-        # 音声ファイルをstaticディレクトリに保存
-        static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
-        if not os.path.exists(static_dir):
-            os.makedirs(static_dir)
+        # 音声データをメモリに生成
+        audio_data = synthesize_speech(text)
         
-        audio_file = os.path.join(static_dir, 'output.mp3')
-        synthesize_speech(text, audio_file)
-        
-        # 音声ファイルのパスを相対パスに変換
-        relative_path = os.path.relpath(audio_file, os.path.dirname(os.path.abspath(__file__)))
+        # バイナリデータをBase64エンコード
+        import base64
+        audio_base64 = base64.b64encode(audio_data).decode('utf-8')
         
         return jsonify({
             'status': 'success',
             'text': text,
-            'audio_file': relative_path
+            'audio_data': audio_base64
         })
     except Exception as e:
         print(f"Error: {str(e)}")
