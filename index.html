@@ -29,8 +29,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             position: relative;
+            padding-top: 40px;
         }
         .character-image {
             width: 100%;
@@ -40,20 +41,26 @@
         .title {
             font-size: 48px;
             color: black;
-            margin: 20px 0;
+            margin: 0;
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
         }
         .button {
             font-size: 32px;
-            color: black;
-            background: none;
+            color: white;
+            background-color: #1a237e;
             border: none;
+            border-radius: 8px;
             cursor: pointer;
-            padding: 15px 30px;
+            padding: 20px 40px;
             margin: 40px 0;
-            transition: color 0.2s;
+            transition: background-color 0.2s;
         }
         .button:hover {
-            color: #666666;
+            background-color: #0d1452;
         }
         .loading-overlay {
             position: fixed;
@@ -78,6 +85,13 @@
             max-width: 800px;
             line-height: 1.5;
         }
+        
+        .description-text {
+            font-size: 20px;
+            color: black;
+            margin: 20px 0;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -87,6 +101,9 @@
         
         <!-- タイトル -->
         <div class="title">AIオヤジ</div>
+        
+        <!-- 説明テキスト -->
+        <div class="description-text">たけるの今日の予定を聞いてみよう！</div>
         
         <!-- オヤジに聞いてみるボタン -->
         <button class="button" id="ask-button" onclick="startGeneration()">オヤジに聞いてみる</button>
