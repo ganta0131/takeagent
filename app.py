@@ -28,6 +28,10 @@ def index():
 @app.route('/generate', methods=['POST'])
 def generate():
     try:
+        print("\n=== Generate endpoint called ===")
+        print(f"Request headers: {dict(request.headers)}")
+        print(f"Request data: {request.get_data()}")
+        
         text = generate_text()
         
         # synthesize_speech.pyから音声合成関数をインポート
@@ -46,10 +50,13 @@ def generate():
             'audio_data': audio_base64
         })
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"\n=== Error in generate endpoint ===")
+        print(f"Error type: {type(e)}")
+        print(f"Error message: {str(e)}")
+        print(f"Stack trace: {traceback.format_exc()}")
         return jsonify({
             'status': 'error',
-            'message': str(e)
+            'message': f"Error type: {type(e).__name__}, Message: {str(e)}"
         }), 500
 
 if __name__ == '__main__':

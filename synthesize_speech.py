@@ -8,6 +8,10 @@ from google.oauth2 import service_account
 
 def synthesize_speech(text, output_file='output.mp3'):
     try:
+        print("\n=== Speech synthesis started ===")
+        print(f"Input text length: {len(text)} characters")
+        print(f"First 100 characters: {text[:100]}")
+        
         # サービスアカウント情報を環境変数から取得
         service_account_info = os.getenv('GOOGLE_SERVICE_ACCOUNT_INFO')
         if not service_account_info:
@@ -21,6 +25,7 @@ def synthesize_speech(text, output_file='output.mp3'):
         
         # クライアントをインスタンス化
         client = texttospeech.TextToSpeechClient(credentials=credentials)
+        print(f"Client created successfully")
         
         # ボイスを設定（日本語、男性）
         voice = texttospeech.VoiceSelectionParams(
@@ -28,11 +33,13 @@ def synthesize_speech(text, output_file='output.mp3'):
             name="ja-JP-Neural2-D",  # 男性の声
             ssml_gender=texttospeech.SsmlVoiceGender.MALE
         )
+        print(f"Voice parameters set")
         
         # 音声の種類を設定（mp3）
         audio_config = texttospeech.AudioConfig(
             audio_encoding=texttospeech.AudioEncoding.MP3
         )
+        print(f"Audio config set")
         
         # テキストを分割（1回あたりの制限は約5000文字）
         max_chars = 1500  # 安全のため1500文字に設定
