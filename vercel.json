@@ -7,7 +7,14 @@
       "config": {
         "pythonVersion": "3.11",
         "installCommand": "pip install -r requirements.txt",
-        "launchCommand": "python app.py"
+        "launchCommand": "python app.py",
+        "networkAccess": {
+          "allowed": [
+            "*.googleapis.com",
+            "*.gstatic.com",
+            "api.openweathermap.org"
+          ]
+        }
       }
     }
   ],
@@ -16,12 +23,5 @@
       "src": "/(.*)",
       "dest": "app.py"
     }
-  ],
-  "networkAccess": {
-    "allowed": [
-      "*.googleapis.com",
-      "*.gstatic.com",
-      "api.openweathermap.org"
-    ]
-  }
+  ]
 }
