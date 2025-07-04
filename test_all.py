@@ -100,10 +100,16 @@ def get_weather():
 
 def get_kyushoku():
     try:
-        SERVICE_ACCOUNT_FILE = 'amplified-ward-457419-g1-d926f1d3100b.json'
-        SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
-        credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+        # サービスアカウント情報を環境変数から取得
+        service_account_info = os.getenv('GOOGLE_SERVICE_ACCOUNT_INFO')
+        if not service_account_info:
+            raise ValueError("GOOGLE_SERVICE_ACCOUNT_INFO environment variable not set")
+            
+        # JSON文字列を辞書に変換
+        credentials_dict = json.loads(service_account_info)
+        
+        # クレデンシャルを作成
+        credentials = service_account.Credentials.from_service_account_info(credentials_dict)
         service = build('sheets', 'v4', credentials=credentials)
         SPREADSHEET_ID = '1VgVASBlOmjK_VLbsbgAGn0wu6Oi5CRiUJXfVZ8zhOpY'
         
@@ -134,10 +140,16 @@ def get_kyushoku():
 
 def get_geko():
     try:
-        SERVICE_ACCOUNT_FILE = 'amplified-ward-457419-g1-d926f1d3100b.json'
-        SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
-        credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+        # サービスアカウント情報を環境変数から取得
+        service_account_info = os.getenv('GOOGLE_SERVICE_ACCOUNT_INFO')
+        if not service_account_info:
+            raise ValueError("GOOGLE_SERVICE_ACCOUNT_INFO environment variable not set")
+            
+        # JSON文字列を辞書に変換
+        credentials_dict = json.loads(service_account_info)
+        
+        # クレデンシャルを作成
+        credentials = service_account.Credentials.from_service_account_info(credentials_dict)
         service = build('sheets', 'v4', credentials=credentials)
         SPREADSHEET_ID = '18LOXzRjakazyQ5SB_yLHfZhZOBTIqp2E_am9gNrIJOQ'
         
@@ -168,10 +180,16 @@ def get_geko():
 
 def get_remind():
     try:
-        SERVICE_ACCOUNT_FILE = 'amplified-ward-457419-g1-d926f1d3100b.json'
-        SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
-        credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+        # サービスアカウント情報を環境変数から取得
+        service_account_info = os.getenv('GOOGLE_SERVICE_ACCOUNT_INFO')
+        if not service_account_info:
+            raise ValueError("GOOGLE_SERVICE_ACCOUNT_INFO environment variable not set")
+            
+        # JSON文字列を辞書に変換
+        credentials_dict = json.loads(service_account_info)
+        
+        # クレデンシャルを作成
+        credentials = service_account.Credentials.from_service_account_info(credentials_dict)
         service = build('sheets', 'v4', credentials=credentials)
         SPREADSHEET_ID = '1QOjCLGUat3G6n3LlaY8iKr9Eu93AEkimNuPUqwFPJoI'
         
