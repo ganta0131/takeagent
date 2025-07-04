@@ -77,6 +77,9 @@ def get_weather():
                     # 天気情報の生成
                     weather_text = []
                     
+                    # 最高気温
+                    weather_text.append(f"今日の最高気温は{int(max_temp)}度です。")
+                    
                     # 現在の天気
                     current_weather = first_weather['weather'][0]['description']
                     weather_text.append(f"今日は{current_weather}です。")
