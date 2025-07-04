@@ -51,11 +51,14 @@ def get_weather():
             
             # 今日の天気情報を取得
             today_weather = []
+            max_temp = float('-inf')  # 最高気温を追跡
             for forecast in data['list']:
                 # UTCタイムスタンプを日本時間に変換
                 forecast_time = datetime.fromtimestamp(forecast['dt'], tz=jst)
                 if forecast_time.date() == now.date():
                     today_weather.append(forecast)
+                    # 最高気温を更新
+                    max_temp = max(max_temp, forecast['main']['temp_max'])
             
             if today_weather:
                 print(f"\n今日の天気データ: {len(today_weather)}件")
