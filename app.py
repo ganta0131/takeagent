@@ -41,15 +41,16 @@ def generate():
         # 音声データをメモリに生成
         audio_data = synthesize_speech(text)
         
-        from flask import send_file
+        import base64
         
-        # メモリバッファから直接音声データを返す
-        return send_file(
-            audio_data,
-            mimetype='audio/mpeg',
-            as_attachment=True,
-            download_name='output.mp3'
-        )
+        # バイトデータをBase64エンコード
+        audio_base64 = base64.b64encode(audio_data.getvalue()).decode('utf-8')
+        
+        return jsonify({
+            'status': 'success',
+            'text': text,
+            'audio_data': audio_base64
+        })
     except Exception as e:
         print(f"\n=== Error in generate endpoint ===")
         print(f"Error type: {type(e)}")
