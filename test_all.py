@@ -45,13 +45,15 @@ def get_weather():
             print(f"APIキー: {os.getenv('OPENWEATHERMAP_API_KEY')}")
             print(f"レスポンスデータ: {data}")
             
-            # 現在の時刻を取得
-            now = datetime.now()
+            # 日本時間（JST）で現在の時刻を取得
+            jst = tz.gettz('Asia/Tokyo')
+            now = datetime.now(jst)
             
             # 今日の天気情報を取得
             today_weather = []
             for forecast in data['list']:
-                forecast_time = datetime.fromtimestamp(forecast['dt'])
+                # UTCタイムスタンプを日本時間に変換
+                forecast_time = datetime.fromtimestamp(forecast['dt'], tz=jst)
                 if forecast_time.date() == now.date():
                     today_weather.append(forecast)
             
@@ -62,7 +64,7 @@ def get_weather():
                 # 朝の天気（9時頃）を取得
                 morning_weather = None
                 for weather in today_weather:
-                    forecast_time = datetime.fromtimestamp(weather['dt'])
+                    forecast_time = datetime.fromtimestamp(weather['dt'], tz=jst)
                     if 8 <= forecast_time.hour <= 10:
                         morning_weather = weather
                         break
@@ -83,7 +85,7 @@ def get_weather():
                     rain_forecast = []
                     for weather in today_weather:
                         if 'rain' in weather and '3h' in weather['rain'] and weather['rain']['3h'] > 0:
-                            rain_time = datetime.fromtimestamp(weather['dt'])
+                            rain_time = datetime.fromtimestamp(weather['dt'], tz=jst)
                             rain_forecast.append((rain_time, weather['rain']['3h']))
                             
                     if rain_forecast:
@@ -137,7 +139,8 @@ def get_kyushoku():
         for row in values:
             if len(row) >= 2:
                 try:
-                    sheet_date = date_parse(row[0]).strftime('%Y/%m/%d')
+                    # 日本時間としてパース
+                    sheet_date = date_parse(row[0], tzinfos={'JST': 9 * 3600}).strftime('%Y/%m/%d')
                     if sheet_date == today:
                         return row[1]
                 except ValueError:
@@ -179,7 +182,8 @@ def get_geko():
         for row in values:
             if len(row) >= 2:
                 try:
-                    sheet_date = date_parse(row[0]).strftime('%Y/%m/%d')
+                    # 日本時間としてパース
+                    sheet_date = date_parse(row[0], tzinfos={'JST': 9 * 3600}).strftime('%Y/%m/%d')
                     if sheet_date == today:
                         return row[1]
                 except ValueError:
