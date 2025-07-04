@@ -8,6 +8,7 @@ import sys
 import io
 from datetime import datetime
 from dateutil.parser import parse as date_parse
+from dateutil import tz
 from dotenv import load_dotenv
 import json
 
@@ -129,7 +130,9 @@ def get_kyushoku():
         if not values:
             return ""
             
-        today = datetime.now().strftime('%Y/%m/%d')
+        # 日本時間（JST）で現在の日付を取得
+        jst = tz.gettz('Asia/Tokyo')
+        today = datetime.now(jst).strftime('%Y/%m/%d')
         found = False
         for row in values:
             if len(row) >= 2:
@@ -169,7 +172,9 @@ def get_geko():
         if not values:
             return ""
             
-        today = datetime.now().strftime('%Y/%m/%d')
+        # 日本時間（JST）で現在の日付を取得
+        jst = tz.gettz('Asia/Tokyo')
+        today = datetime.now(jst).strftime('%Y/%m/%d')
         found = False
         for row in values:
             if len(row) >= 2:
