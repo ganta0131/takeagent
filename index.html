@@ -3,78 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TakeAgent - 朝のメッセージ生成</title>
+    <title>AIオヤジ</title>
     <style>
         body {
-            font-family: 'Yu Gothic', sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+            font-family: 'MPLUS1p-ExtraBold', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        @font-face {
+            font-family: 'MPLUS1p-ExtraBold';
+            src: url('MPLUS1p-ExtraBold.ttf') format('truetype');
+            font-weight: bold;
+            font-style: normal;
         }
         .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 1080px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
         }
-        .generate-btn {
-            background-color: #4CAF50;
-            color: white;
+        .character-image {
+            width: 100%;
+            max-width: 1080px;
+            height: auto;
+        }
+        .title {
+            font-size: 48px;
+            color: black;
+            margin: 20px 0;
+        }
+        .button {
+            font-size: 32px;
+            color: black;
+            background: none;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
-            margin: 10px 0;
+            padding: 15px 30px;
+            margin: 40px 0;
+            transition: color 0.2s;
         }
-        .generate-btn:hover {
-            background-color: #45a049;
+        .button:hover {
+            color: #666666;
         }
-        .message-box {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 5px;
-            background-color: #f8f9fa;
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
         }
-        .audio-controls {
-            margin-top: 20px;
-        }
-        .audio-controls button {
-            background-color: #2196F3;
+        .loading-text {
+            font-size: 48px;
             color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 10px;
         }
-        .audio-controls button:hover {
-            background-color: #1976D2;
+        .result-text {
+            font-size: 24px;
+            color: white;
+            text-align: center;
+            margin: 40px 0;
+            max-width: 800px;
+            line-height: 1.5;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>TakeAgent</h1>
-        <p>朝のメッセージを生成し、音声に変換します</p>
+        <!-- キャラクター画像 -->
+        <img id="character-image" class="character-image" src="mouse_close.png" alt="キャラクター">
         
-        <button class="generate-btn" onclick="generateMessage()">メッセージを生成</button>
+        <!-- タイトル -->
+        <div class="title">AIオヤジ</div>
         
-        <div id="message-box" class="message-box" style="display: none;">
-            <h2>生成されたメッセージ</h2>
-            <div id="message-content"></div>
-        </div>
+        <!-- オヤジに聞いてみるボタン -->
+        <button class="button" id="ask-button" onclick="startGeneration()">オヤジに聞いてみる</button>
         
-        <div id="audio-controls" class="audio-controls" style="display: none;">
-            <button onclick="playAudio()">再生</button>
-            <button onclick="pauseAudio()">一時停止</button>
-            <button onclick="stopAudio()">停止</button>
+        <!-- もう一度聞くボタン -->
+        <button class="button" id="retry-button" onclick="playAudio()" style="display: none;">もう一度聞く</button>
+        
+        <!-- 生成テキスト -->
+        <div id="result-text" class="result-text" style="display: none;"></div>
+        
+        <!-- 生成中オーバーレイ -->
+        <div class="loading-overlay" id="loading-overlay">
+            <div class="loading-text">生成中...</div>
         </div>
     </div>
 
     <script>
         let audio = null;
+        let isPlaying = false;
+        let animationTimer = null;
+        const characterImages = ['mouse_close.png', 'mouse_open.png'];
+        let currentImageIndex = 0;
 
         // Base64文字列をBlobに変換する関数
         function base64ToBlob(base64, contentType) {
@@ -86,7 +120,24 @@
             return new Blob([bytes], { type: contentType });
         }
 
-        function generateMessage() {
+        // キャラクター画像を切り替える関数
+        function toggleCharacterImage() {
+            if (isPlaying) {
+                currentImageIndex = (currentImageIndex + 1) % characterImages.length;
+                document.getElementById('character-image').src = characterImages[currentImageIndex];
+                animationTimer = setTimeout(toggleCharacterImage, 300);
+            }
+        }
+
+        // 生成処理を開始
+        function startGeneration() {
+            // ボタンを非表示に
+            document.getElementById('ask-button').style.display = 'none';
+            
+            // 生成中オーバーレイを表示
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.style.display = 'flex';
+            
             fetch('/generate', {
                 method: 'POST',
                 headers: {
@@ -101,32 +152,35 @@
                 return response.json();
             })
             .then(data => {
-                if (data.status === 'success') {
-                    document.getElementById('message-content').textContent = data.text;
-                    document.getElementById('message-box').style.display = 'block';
-                    document.getElementById('audio-controls').style.display = 'block';
-                    
-                    // 音声データをBase64からBlobに変換
-                    const audioBlob = base64ToBlob(data.audio_data, 'audio/mpeg');
-                    
-                    // ブラウザで再生できるURLを作成
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    
-                    // 音声データを再生する準備
-                    if (audio) {
-                        audio.pause();
-                        audio.currentTime = 0;
+                // 生成中オーバーレイを非表示
+                loadingOverlay.style.display = 'none';
+                
+                // キャラクター画像を初期状態に戻す
+                document.getElementById('character-image').src = 'mouse_close.png';
+                
+                // 生成テキストを表示
+                const resultText = document.getElementById('result-text');
+                resultText.textContent = data.message;
+                resultText.style.display = 'block';
+                
+                // 音声データを再生
+                const audioBlob = base64ToBlob(data.audio, 'audio/mp3');
+                audio = new Audio(URL.createObjectURL(audioBlob));
+                
+                // 再生開始
+                isPlaying = true;
+                audio.play();
+                toggleCharacterImage();
+                
+                // 再生終了時の処理
+                audio.addEventListener('ended', () => {
+                    isPlaying = false;
+                    if (animationTimer) {
+                        clearTimeout(animationTimer);
                     }
-                    
-                    // 新しいAudioインスタンスを作成
-                    audio = new Audio(audioUrl);
-                    
-                    // メッセージを生成したことをログに記録
-                    console.log('メッセージを生成しました:', data.text);
-                    console.log('音声URL:', audioUrl);
-                } else {
-                    alert('メッセージの生成に失敗しました: ' + data.message);
-                }
+                    document.getElementById('character-image').src = 'mouse_close.png';
+                    document.getElementById('retry-button').style.display = 'block';
+                });
             })
             .catch(error => {
                 console.error('Error:', error);
