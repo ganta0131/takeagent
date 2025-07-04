@@ -60,20 +60,33 @@ def synthesize_speech(text, output_file='output.mp3'):
             parts.append(text[:split_point])
             text = text[split_point:].strip()
         
-        # すべての部分を合成し、mp3ファイルに保存
-        with open(output_file, "wb") as out:
-            for i, part in enumerate(parts):
-                print(f"Processing part {i+1}/{len(parts)}: {part[:50]}...")
+        # メモリバッファを作成
+        audio_buffer = io.BytesIO()
+        
+        # すべての部分を合成し、メモリバッファに保存
+        for i, part in enumerate(parts):
+            print(f"Processing part {i+1}/{len(parts)}: {part[:50]}...")
+            
+            # テキストを合成
+            synthesis_input = texttospeech.SynthesisInput(text=part)
+            response = client.synthesize_speech(
+                input=synthesis_input,
+                voice=voice,
+                audio_config=audio_config
+            )
+            
+            # バッファに追加
+            audio_buffer.write(response.audio_content)
         
         print("All parts processed successfully.")
-        # メモリ上のバイトデータを返す
-        return audio_content
+        
+        # バッファの開始位置を戻す
+        audio_buffer.seek(0)
+        
+        return audio_buffer
         
     except Exception as e:
         print(f"Error details: {str(e)}")
-        # エラーをログファイルに記録
-        with open('error.log', 'a', encoding='utf-8') as f:
-            f.write(f'音声合成エラー: {str(e)}\n')
         return None
 
 def main():

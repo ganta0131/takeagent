@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 from dotenv import load_dotenv
 import sys
 import importlib.util
+import traceback
 
 # 環境変数の読み込み
 load_dotenv()
@@ -40,19 +41,20 @@ def generate():
         # 音声データをメモリに生成
         audio_data = synthesize_speech(text)
         
-        # バイナリデータをBase64エンコード
-        import base64
-        audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+        from flask import send_file
         
-        return jsonify({
-            'status': 'success',
-            'text': text,
-            'audio_data': audio_base64
-        })
+        # メモリバッファから直接音声データを返す
+        return send_file(
+            audio_data,
+            mimetype='audio/mpeg',
+            as_attachment=True,
+            download_name='output.mp3'
+        )
     except Exception as e:
         print(f"\n=== Error in generate endpoint ===")
         print(f"Error type: {type(e)}")
         print(f"Error message: {str(e)}")
+        import traceback
         print(f"Stack trace: {traceback.format_exc()}")
         return jsonify({
             'status': 'error',
