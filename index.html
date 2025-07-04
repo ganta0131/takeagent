@@ -156,6 +156,8 @@
                 return response.json();
             })
             .then(data => {
+                console.log('Received data:', data); // デバッグ用
+                
                 // 生成中オーバーレイを非表示
                 loadingOverlay.style.display = 'none';
                 
@@ -164,17 +166,29 @@
                 
                 // 生成テキストを表示
                 const resultText = document.getElementById('result-text');
-                resultText.textContent = data.message;
+                resultText.textContent = data.text; // textキーを使用
                 resultText.style.display = 'block';
                 
-                // 音声データを再生
-                const audioBlob = base64ToBlob(data.audio, 'audio/mp3');
-                audio = new Audio(URL.createObjectURL(audioBlob));
+                // 音声データの存在確認
+                if (!data.audio_data) {
+                    console.error('Audio data is missing');
+                    alert('音声データが取得できませんでした。');
+                    return;
+                }
                 
-                // 再生開始
-                isPlaying = true;
-                audio.play();
-                toggleCharacterImage();
+                // 音声データを再生
+                try {
+                    const audioBlob = base64ToBlob(data.audio_data, 'audio/mp3');
+                    audio = new Audio(URL.createObjectURL(audioBlob));
+                    
+                    // 再生開始
+                    isPlaying = true;
+                    audio.play();
+                    toggleCharacterImage();
+                } catch (error) {
+                    console.error('Error playing audio:', error);
+                    alert('音声の再生に失敗しました。エラー: ' + error.message);
+                }
                 
                 // 再生終了時の処理
                 audio.addEventListener('ended', () => {
@@ -188,7 +202,9 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('エラーが発生しました: ' + error.message);
+                loadingOverlay.style.display = 'none';
+                document.getElementById('ask-button').style.display = 'block';
+                alert('生成中にエラーが発生しました: ' + error.message);
             });
         }
 
