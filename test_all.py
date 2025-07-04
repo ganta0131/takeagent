@@ -9,6 +9,7 @@ import io
 from datetime import datetime
 from dateutil.parser import parse as date_parse
 from dotenv import load_dotenv
+import json
 
 # 環境変数の読み込み
 load_dotenv()
