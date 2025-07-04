@@ -30,6 +30,11 @@ def get_weather():
         
         # APIリクエストを実行
         response = requests.get(url, params=params)
+        print(f"\n=== APIリクエスト詳細 ===")
+        print(f"URL: {response.url}")
+        print(f"ステータスコード: {response.status_code}")
+        print(f"レスポンスヘッダー: {dict(response.headers)}")
+        
         if response.status_code == 200:
             data = response.json()
             
