@@ -76,6 +76,16 @@
     <script>
         let audio = null;
 
+        // Base64文字列をBlobに変換する関数
+        function base64ToBlob(base64, contentType) {
+            const binaryString = window.atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return new Blob([bytes], { type: contentType });
+        }
+
         function generateMessage() {
             fetch('/generate', {
                 method: 'POST',
@@ -96,15 +106,20 @@
                     document.getElementById('message-box').style.display = 'block';
                     document.getElementById('audio-controls').style.display = 'block';
                     
-                    // 音声ファイルを再生する準備
+                    // 音声データをBase64からBlobに変換
+                    const audioBlob = base64ToBlob(data.audio_data, 'audio/mpeg');
+                    
+                    // ブラウザで再生できるURLを作成
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    
+                    // 音声データを再生する準備
                     if (audio) {
                         audio.pause();
                         audio.currentTime = 0;
                     }
                     
-                    // 音声ファイルのパスを正しく設定
-                    const audioPath = '/' + data.audio_file;
-                    audio = new Audio(audioPath);
+                    // 新しいAudioインスタンスを作成
+                    audio = new Audio(audioUrl);
                     
                     // メッセージを生成したことをログに記録
                     console.log('メッセージを生成しました:', data.text);
