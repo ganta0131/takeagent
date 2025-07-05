@@ -199,27 +199,56 @@
                 
                 // 音声データを再生
                 try {
+                    // 既存の音声をクリーンアップ
+                    if (audio) {
+                        audio.pause();
+                        audio = null;
+                    }
+                    
+                    // 音声データをBlobに変換
                     const audioBlob = base64ToBlob(data.audio_data, 'audio/mp3');
+                    
+                    // 新しいAudioオブジェクトを作成
                     audio = new Audio(URL.createObjectURL(audioBlob));
                     
                     // 再生開始
-                    isPlaying = true;
                     audio.play();
+                    isPlaying = true;
                     toggleCharacterImage();
+                    
+                    // 再生終了時の処理
+                    audio.addEventListener('ended', () => {
+                        isPlaying = false;
+                        if (animationTimer) {
+                            clearTimeout(animationTimer);
+                            animationTimer = null;
+                        }
+                        document.getElementById('character-image').src = 'mouse_close.png';
+                        document.getElementById('retry-button').style.display = 'block';
+                    });
+                    
+                    // エラー時の処理
+                    audio.addEventListener('error', (error) => {
+                        console.error('Audio playback error:', error);
+                        isPlaying = false;
+                        if (animationTimer) {
+                            clearTimeout(animationTimer);
+                            animationTimer = null;
+                        }
+                        document.getElementById('character-image').src = 'mouse_close.png';
+                        alert('音声の再生に失敗しました。');
+                    });
+                    
                 } catch (error) {
                     console.error('Error playing audio:', error);
-                    alert('音声の再生に失敗しました。エラー: ' + error.message);
-                }
-                
-                // 再生終了時の処理
-                audio.addEventListener('ended', () => {
                     isPlaying = false;
                     if (animationTimer) {
                         clearTimeout(animationTimer);
+                        animationTimer = null;
                     }
                     document.getElementById('character-image').src = 'mouse_close.png';
-                    document.getElementById('retry-button').style.display = 'block';
-                });
+                    alert('音声の再生に失敗しました。エラー: ' + error.message);
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
