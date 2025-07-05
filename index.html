@@ -136,6 +136,9 @@
         let animationTimer = null;
         const characterImages = ['mouse_close.png', 'mouse_open.png'];
         let currentImageIndex = 0;
+        
+        // 画像のプレロード
+        preloadImages();
 
         // Base64文字列をBlobに変換する関数
         function base64ToBlob(base64, contentType) {
@@ -155,8 +158,15 @@
         function toggleCharacterImage() {
             if (isPlaying) {
                 currentImageIndex = (currentImageIndex + 1) % characterImages.length;
-                document.getElementById('character-image').src = characterImages[currentImageIndex];
-                animationTimer = setTimeout(toggleCharacterImage, 200); // 200msに変更
+                
+                // 画像のキャッシュを回避
+                const img = new Image();
+                img.onload = () => {
+                    document.getElementById('character-image').src = img.src;
+                };
+                img.src = characterImages[currentImageIndex] + '?v=' + Date.now();
+                
+                animationTimer = setTimeout(toggleCharacterImage, 200);
             } else if (animationTimer) {
                 clearTimeout(animationTimer);
                 animationTimer = null;
