@@ -148,6 +148,9 @@
                 currentImageIndex = (currentImageIndex + 1) % characterImages.length;
                 document.getElementById('character-image').src = characterImages[currentImageIndex];
                 animationTimer = setTimeout(toggleCharacterImage, 300);
+            } else if (animationTimer) {
+                clearTimeout(animationTimer);
+                animationTimer = null;
             }
         }
 
@@ -228,9 +231,24 @@
 
         function playAudio() {
             if (audio) {
-                audio.play();
-                isPlaying = true;
-                toggleCharacterImage();
+                try {
+                    // 音声データが正しく読み込まれているか確認
+                    if (audio.readyState === audio.HAVE_ENOUGH_DATA) {
+                        audio.play();
+                        isPlaying = true;
+                        toggleCharacterImage();
+                    } else {
+                        console.error('音声データが読み込まれていません');
+                    }
+                } catch (error) {
+                    console.error('音声の再生に失敗しました:', error);
+                    isPlaying = false;
+                    if (animationTimer) {
+                        clearTimeout(animationTimer);
+                        animationTimer = null;
+                    }
+                    document.getElementById('character-image').src = 'mouse_close.png';
+                }
             }
         }
 
