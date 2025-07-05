@@ -54,7 +54,7 @@
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
-            background-color: #4CAF50;
+            background-color: #1a237e;
             color: white;
             border: none;
             border-radius: 4px;
@@ -62,7 +62,7 @@
         }
         
         .button:hover {
-            background-color: #45a049;
+            background-color: #0d1452;
         }
         
         #ask-button {
@@ -156,7 +156,7 @@
             if (isPlaying) {
                 currentImageIndex = (currentImageIndex + 1) % characterImages.length;
                 document.getElementById('character-image').src = characterImages[currentImageIndex];
-                animationTimer = setTimeout(toggleCharacterImage, 300);
+                animationTimer = setTimeout(toggleCharacterImage, 200); // 200msに変更
             } else if (animationTimer) {
                 clearTimeout(animationTimer);
                 animationTimer = null;
