@@ -229,6 +229,8 @@
         function playAudio() {
             if (audio) {
                 audio.play();
+                isPlaying = true;
+                toggleCharacterImage();
             }
         }
 
