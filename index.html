@@ -91,15 +91,26 @@
             font-size: 48px;
             color: white;
         }
-        .result-text {
-            font-size: 24px;
+        .dialog-overlay {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 600px;
+            background-color: rgba(0, 0, 0, 0.8);
             color: white;
-            text-align: center;
-            margin: 40px 0;
-            max-width: 800px;
-            line-height: 1.5;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            z-index: 1000;
+            font-size: 20px;
+            line-height: 1.8;
+            word-wrap: break-word;
         }
-        
+        .dialog-text {
+            margin-bottom: 20px;
+        }
         .description-text {
             font-size: 20px;
             color: black;
@@ -122,11 +133,11 @@
         <!-- オヤジに聞いてみるボタン -->
         <button class="button" id="ask-button" onclick="startGeneration()">オヤジに聞いてみる</button>
         
-        <!-- もう一度聞くボタン -->
-        <button class="button" id="retry-button" onclick="playAudio()" style="display: none;">もう一度聞く</button>
-        
-        <!-- 生成テキスト -->
-        <div id="result-text" class="result-text" style="display: none;"></div>
+        <!-- ダイアログ -->
+        <div id="dialog" class="dialog-overlay">
+            <div id="dialog-text" class="dialog-text"></div>
+            <button class="button" id="retry-button" onclick="playAudio()">もう一度聞く</button>
+        </div>
         
         <!-- 生成中オーバーレイ -->
         <div class="loading-overlay" id="loading-overlay">
@@ -177,10 +188,18 @@
             }
         }
 
+        // ダイアログを表示/非表示
+        function toggleDialog(show) {
+            const dialog = document.getElementById('dialog');
+            const askButton = document.getElementById('ask-button');
+            dialog.style.display = show ? 'block' : 'none';
+            askButton.style.display = show ? 'none' : 'inline-block';
+        }
+
         // 生成処理を開始
         function startGeneration() {
             // ボタンを非表示に
-            document.getElementById('ask-button').style.display = 'none';
+            toggleDialog(false);
             
             // 生成中オーバーレイを表示
             const loadingOverlay = document.getElementById('loading-overlay');
@@ -200,9 +219,75 @@
                 return response.json();
             })
             .then(data => {
-                console.log('Received data:', data); // デバッグ用
-                
                 // 生成中オーバーレイを非表示
+                loadingOverlay.style.display = 'none';
+                
+                // テキストと音声データを取得
+                const text = data.text;
+                const audioData = data.audio_data;
+                
+                // ダイアログのテキストを更新
+                document.getElementById('dialog-text').textContent = text;
+                
+                // 音声データを再生
+                playAudioWithData(audioData);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // エラー時はボタンを表示
+                toggleDialog(false);
+            });
+        }
+
+        // 音声データを再生
+        function playAudioWithData(base64Audio) {
+            const blob = base64ToBlob(base64Audio, 'audio/wav');
+            const url = URL.createObjectURL(blob);
+            
+            audio = new Audio(url);
+            audio.addEventListener('ended', () => {
+                // 音声再生終了時にダイアログを表示
+                toggleDialog(true);
+                isPlaying = false;
+            });
+            
+            audio.addEventListener('play', () => {
+                isPlaying = true;
+                toggleCharacterImage();
+            });
+            
+            audio.addEventListener('error', () => {
+                console.error('Audio playback error');
+                toggleDialog(false);
+                isPlaying = false;
+            });
+            
+            audio.play();
+        }
+
+        // 既存のplayAudio関数を更新
+        function playAudio() {
+            toggleDialog(false);
+            startGeneration();
+        }
+
+        // 既存のpauseAudio関数を更新
+        function pauseAudio() {
+            if (audio) {
+                audio.pause();
+                isPlaying = false;
+            }
+        }
+
+        // 既存のstopAudio関数を更新
+        function stopAudio() {
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+                isPlaying = false;
+            }
+        }
+    </script>
                 loadingOverlay.style.display = 'none';
                 
                 // キャラクター画像を初期状態に戻す
