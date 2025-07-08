@@ -32,7 +32,7 @@ def get_weather():
         
         # APIリクエストを実行
         response = requests.get(url, params=params)
-        print(f"\n=== APIリクエスト詳細 ===")
+        print(f"\n=== 使用モデル: {model.model_id} ===")
         print(f"URL: {response.url}")
         print(f"ステータスコード: {response.status_code}")
         print(f"レスポンスヘッダー: {dict(response.headers)}")
@@ -235,7 +235,12 @@ def generate_text():
     genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
     
     # モデルの選択
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        print(f"\n=== モデル初期化成功: {model.model_id} ===")
+    except Exception as e:
+        print(f"\n=== モデル初期化エラー: {str(e)} ===")
+        return "モデルの初期化に失敗しました。もう一度お試しください。"
     
     # 情報の取得
     weather = get_weather()
