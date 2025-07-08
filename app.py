@@ -19,12 +19,16 @@ spec.loader.exec_module(test_all)
 def generate_text():
     return test_all.generate_text()
 
-app = Flask(__name__, static_folder='.', static_url_path='')
+app = Flask(__name__, static_folder='.', static_url_path='/static', template_folder='.')
 CORS(app)
 
 @app.route('/')
-def index():
+def home():
     return app.send_static_file('index.html')
+
+@app.route('/')
+def index_route():
+    return home()
 
 @app.route('/generate', methods=['POST'])
 def generate():
