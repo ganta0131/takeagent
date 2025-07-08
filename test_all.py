@@ -236,7 +236,6 @@ def generate_text():
     
     # モデルの選択
     model = genai.GenerativeModel('gemini-1.5-flash')
-    print(f"\n=== 使用モデル: {model.name} ===")
     
     # 情報の取得
     weather = get_weather()
