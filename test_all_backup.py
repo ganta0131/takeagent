@@ -212,18 +212,32 @@ def get_remind():
         # クレデンシャルを作成
         credentials = service_account.Credentials.from_service_account_info(credentials_dict)
         service = build('sheets', 'v4', credentials=credentials)
-        SPREADSHEET_ID = '1QOjCLGUat3G6n3LlaY8iKr9Eu93AEkimNuPUqwFPJoI'
+        SPREADSHEET_ID = '18LOXzRjakazyQ5SB_yLHfZhZOBTIqp2E_am9gNrIJOQ'
         
         result = service.spreadsheets().values().get(
             spreadsheetId=SPREADSHEET_ID,
-            range='A2'
+            range='A:B'
         ).execute()
         
         values = result.get('values', [])
+        
         if not values:
             return ""
             
-        return values[0][0] if values[0] else ""
+        # 日本時間（JST）で現在の日付を取得
+        jst = tz.gettz('Asia/Tokyo')
+        today = datetime.now(jst).strftime('%Y/%m/%d')
+        found = False
+        for row in values:
+            if len(row) >= 2:
+                try:
+                    # 日本時間としてパース
+                    sheet_date = date_parse(row[0], tzinfos={'JST': 9 * 3600}).strftime('%Y/%m/%d')
+                    if sheet_date == today:
+                        return row[1]
+                except ValueError:
+                    continue
+        return ""
     except Exception as e:
         print(f"リマインドデータ取得エラー: {str(e)}")
         return ""
@@ -235,7 +249,7 @@ def generate_text():
     genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
     
     # モデルの選択
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('models/gemini-2.0-flash-001')
     
     # 情報の取得
     weather = get_weather()
@@ -296,20 +310,6 @@ def generate_text():
         print("エラーの詳細:", e)
         # エラー時の代替メッセージ
         return "おはよう、たける！今日も元気だね。昨日は楽しかった？\n\n天気や給食の情報は、もう一度試してね。今日も頑張ろう！"
-    motivation = "今日も元気でいきましょうね！"
-    
-    # 全てのテキストを結合
-    total_text = "\n".join([
-        greeting,
-        yesterday_question,
-        weather_text,
-        kyushoku_text,
-        geko_text,
-        remind_text,
-        motivation
-    ])
-    
-    return total_text
 
 def main():
     print("\n全体テスト開始")
@@ -318,7 +318,6 @@ def main():
     # 読み上げ用テキストの生成
     text = generate_text()
     print("\n生成された読み上げテキスト:")
-    print("=======================================")
     print(text)
 
 if __name__ == '__main__':
