@@ -315,7 +315,6 @@ def generate_text():
     ])
     
     return total_text
-
 def main():
     print("\n全体テスト開始")
     print("=======================================")
