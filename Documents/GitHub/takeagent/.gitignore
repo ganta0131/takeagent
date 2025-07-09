@@ -1,7 +1,0 @@
-# Python
-venv/
-__pycache__/
-
-
-# なんかうまくいかんからIgnore folderに無視ファイルつっこみ
-ignore/
