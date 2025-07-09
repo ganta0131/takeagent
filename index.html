@@ -87,8 +87,8 @@
             background: rgba(255, 255, 255, 0.8);
             border-radius: 15px;
             padding: 20px;
-            max-width: 600px;
-            width: 90%;
+            max-width: 800px;
+            width: 95%;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
         
@@ -99,6 +99,9 @@
             margin-bottom: 15px;
             word-wrap: break-word;
             line-height: 1.5;
+            max-width: 800px;
+            width: 95%;
+            margin: 0 auto;
         }
         
         .dialog-button {
@@ -296,6 +299,10 @@
                     isPlaying = true;
                     toggleCharacterImage();
                     
+                    // ダイアログを非表示に
+                    const dialogOverlay = document.getElementById('dialog-overlay');
+                    dialogOverlay.style.display = 'none';
+                    
                     // 再生終了時の処理
                     audio.addEventListener('ended', () => {
                         isPlaying = false;
@@ -305,9 +312,9 @@
                         }
                         document.getElementById('character-image').src = 'mouse_close.png';
                         
-                        // ダイアログを非表示に
+                        // ダイアログを表示
                         const dialogOverlay = document.getElementById('dialog-overlay');
-                        dialogOverlay.style.display = 'none';
+                        dialogOverlay.style.display = 'flex';
                         
                         // もう一度聞くボタンを表示
                         document.getElementById('retry-dialog-button').style.display = 'block';
@@ -362,9 +369,9 @@
                         isPlaying = true;
                         toggleCharacterImage();
                         
-                        // ダイアログを表示
+                        // ダイアログを非表示に
                         const dialogOverlay = document.getElementById('dialog-overlay');
-                        dialogOverlay.style.display = 'flex';
+                        dialogOverlay.style.display = 'none';
                     } else {
                         console.error('音声データが読み込まれていません');
                     }
